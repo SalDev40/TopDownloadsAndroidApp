@@ -23,47 +23,96 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Main Activity";
     private ListView appList = null;
+    private String feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
+    private int feedLimit = 10;
+
+    private String feedCachedUrl = "None";
+    public static final String STATE_FEED_URL = "feedUrl";
+    public static final String STATE_FEED_LIMIT = "feedLimit";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        //when screen rotates, it causes screen to be recreated
+        //restore the feedUrl and feedLimit so its not lost
+        if (savedInstanceState != null) {
+            this.feedUrl = savedInstanceState.getString(STATE_FEED_URL);
+            this.feedLimit = savedInstanceState.getInt(STATE_FEED_LIMIT);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        appList = findViewById(R.id.xml_list_view);
-        downloadUrl("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml");
+        this.appList = findViewById(R.id.xml_list_view);
+        Log.d(TAG, "Feed Url: " + String.format(this.feedUrl, this.feedLimit));
+        downloadUrl(String.format(this.feedUrl, this.feedLimit));
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         this.getMenuInflater().inflate(R.menu.feeds_menu, menu);
+
+        //restore the proper checked button
+        if (feedLimit == 10) {
+            menu.findItem(R.id.menu_top_10).setChecked(true);
+        } else {
+            menu.findItem(R.id.menu_top_25).setChecked(true);
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        String feedUrl;
         switch (item.getItemId()) {
             case R.id.menu_free:
-                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml";
+                this.feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
                 break;
             case R.id.menu_paid:
-                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml";
+                this.feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=%d/xml";
                 break;
             case R.id.menu_songs:
-                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=10/xml";
+                this.feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=%d/xml";
+                break;
+            case R.id.menu_top_10:
+            case R.id.menu_top_25:
+                if (!item.isChecked()) {
+                    item.setChecked(true);
+                    this.feedLimit = 35 - this.feedLimit;
+                }
+                break;
+            case R.id.menu_refresh:
+                feedCachedUrl = "None";
                 break;
             default:
-                feedUrl = "";
                 return super.onOptionsItemSelected(item);
         }
+        String selectedUrl = String.format(this.feedUrl, this.feedLimit);
 
-        downloadUrl(feedUrl);
+        Log.d(TAG, "Selected feed Url: " + selectedUrl);
+        //optimize so we dont re download the same URL code
+        if (!selectedUrl.equalsIgnoreCase(feedCachedUrl)) {
+            Log.d(TAG, "New Feed Cached Url: " + String.format(this.feedUrl, this.feedLimit));
+            this.feedCachedUrl = selectedUrl;
+            downloadUrl(selectedUrl);
+        } else {
+            Log.d(TAG, "Using Cached Url: " + feedCachedUrl);
+        }
         return true;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putString(STATE_FEED_URL, feedUrl);
+        outState.putInt(STATE_FEED_LIMIT, feedLimit);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     private void downloadUrl(String url) {
         new DownloadData().execute(url);
-
     }
 
     private class DownloadData extends AsyncTask<String, Void, String> {
