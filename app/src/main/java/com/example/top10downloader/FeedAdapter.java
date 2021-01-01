@@ -36,18 +36,39 @@ public class FeedAdapter extends ArrayAdapter {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
 
-        View view = layoutInflater.inflate(layoutResource, parent, false);
+        ViewHolder view = null;
 
-        TextView tvName = view.findViewById(R.id.tv_name);
-        TextView tvArtist = view.findViewById(R.id.tv_artist);
-        TextView tvSummary = view.findViewById(R.id.tv_summary);
+        //if we dont have a view to reuse, inflate a new view
+        //optimizes so we dont create a new view each time (bad for RAM)
+        if (convertView == null) {
+            convertView = layoutInflater.inflate(layoutResource, parent, false);
+            //make sure to findViewById since we are creating a new view
+            view = new ViewHolder(convertView);
+            convertView.setTag(view);
+        } else {
+            //make sure to not findViewById if are using previous view
+            //which already has views references found and stored in it
+            view = (ViewHolder) convertView.getTag();
+        }
 
         FeedEntry currentApp = this.applications.get(position);
+        view.tvName.setText(currentApp.getName());
+        view.tvArtist.setText(currentApp.getArtist());
+        view.tvSummary.setText(currentApp.getSummary());
 
-        tvName.setText(currentApp.getName());
-        tvArtist.setText(currentApp.getArtist());
-        tvSummary.setText(currentApp.getSummary());
+        return convertView;
+    }
 
-        return view;
+    private class ViewHolder {
+        final TextView tvName;
+        final TextView tvArtist;
+        final TextView tvSummary;
+
+        public ViewHolder(View v) {
+            this.tvName = v.findViewById(R.id.tv_name);
+            this.tvArtist = v.findViewById(R.id.tv_artist);
+            this.tvSummary = v.findViewById(R.id.tv_summary);
+
+        }
     }
 }

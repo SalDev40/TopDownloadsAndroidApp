@@ -1,11 +1,14 @@
 package com.example.top10downloader;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -21,16 +24,45 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Main Activity";
     private ListView appList = null;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         appList = findViewById(R.id.xml_list_view);
+        downloadUrl("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml");
+    }
 
-        DownloadData downloadData = new DownloadData();
-        downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=25/xml");
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        this.getMenuInflater().inflate(R.menu.feeds_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        String feedUrl;
+        switch (item.getItemId()) {
+            case R.id.menu_free:
+                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml";
+                break;
+            case R.id.menu_paid:
+                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml";
+                break;
+            case R.id.menu_songs:
+                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=10/xml";
+                break;
+            default:
+                feedUrl = "";
+                return super.onOptionsItemSelected(item);
+        }
+
+        downloadUrl(feedUrl);
+        return true;
+    }
+
+    private void downloadUrl(String url) {
+        new DownloadData().execute(url);
 
     }
 
@@ -46,7 +78,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //uses toString method to display the list items
-            FeedAdapter feedAdapter = new FeedAdapter(MainActivity.this,
+            FeedAdapter feedAdapter = new FeedAdapter(
+                    MainActivity.this,
                     R.layout.list_record,
                     newParser.getApplications());
 

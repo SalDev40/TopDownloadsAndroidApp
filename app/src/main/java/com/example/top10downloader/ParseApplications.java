@@ -42,7 +42,7 @@ public class ParseApplications {
                 //<name> Hello world </name>
                 switch (eventType) {
                     case XmlPullParser.START_TAG:
-                        Log.d(TAG, "parse: Starting tag for: " + tagName);
+//                        Log.d(TAG, "parse: Starting tag for: " + tagName);
                         if ("entry".equalsIgnoreCase(tagName)) {
                             inEntry = true; //beginning of entry tag
                             currentRecord = new FeedEntry();
@@ -52,7 +52,7 @@ public class ParseApplications {
                         textValue = xmlPullParser.getText();
                         break;
                     case XmlPullParser.END_TAG:
-                        Log.d(TAG, "parse: ending tag for: " + tagName);
+//                        Log.d(TAG, "parse: ending tag for: " + tagName);
 
                         //only get these tag values if we are in an entry tag
 
@@ -82,7 +82,7 @@ public class ParseApplications {
                 eventType = xmlPullParser.next();
             }
 
-            this.printApplications();
+//            this.printApplications();
 
         } catch (Exception e) {
             status = false;
